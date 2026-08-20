@@ -3,10 +3,10 @@ using Whatsapp.DAL.data;
 using Whatsapp.DAL.models;
 
 namespace Whatsapp.DAL.Services;
-public class RefreshTokenService
+public class RefreshTokenRepository
 {
     private readonly ApplicationDbContext _dbContext;
-    public RefreshTokenService(ApplicationDbContext dbContext)
+    public RefreshTokenRepository(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
     }
@@ -20,7 +20,6 @@ public class RefreshTokenService
     public async Task<RefreshToken> GetActiveByHashTokenAsync(string HashedToken)
     {
         var result =  await _dbContext.RefreshTokens
-            .AsNoTracking()
             .Include(x => x.User)
             .FirstOrDefaultAsync(r => r.TokenHash == HashedToken &&
                                       r.RevokedAt == null &&

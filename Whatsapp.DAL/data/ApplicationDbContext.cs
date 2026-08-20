@@ -14,6 +14,9 @@ public class ApplicationDbContext:IdentityDbContext<User>
         
     }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<Message> Messages { get; set; }
+    public DbSet<ConversationMember> ConversationMembers { get; set; }
+    public DbSet<Conversation> Conversations { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -22,6 +25,13 @@ public class ApplicationDbContext:IdentityDbContext<User>
         modelBuilder.Entity<IdentityRole>()
             .HasData(SeadData.LoadRoles());
             
+        modelBuilder.Entity<ConversationMember>()
+            .HasKey(x => new
+            {
+                x.ConversationId,
+                x.UserId
+            });
+        
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 }

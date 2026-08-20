@@ -18,16 +18,16 @@ public class AccountService
     private readonly UserManager<User> _userManager;
     private IConfiguration _configuration;
     private readonly ILogger<AccountService> _logger;
-    private readonly RefreshTokenService _refreshTokenService;
+    private readonly RefreshTokenRepository _refreshTokenRepository;
     public AccountService(UserManager<User> userManager, 
         IConfiguration configuration,
         ILogger<AccountService> logger,
-        RefreshTokenService refreshTokenService)
+        RefreshTokenRepository refreshTokenRepository)
     {
         _userManager = userManager;
         _configuration = configuration;
         _logger = logger;
-        _refreshTokenService = refreshTokenService;
+        _refreshTokenRepository = refreshTokenRepository;
     }
     
     public async Task<AuthTokenDto> GenerateAuthTokenAsync(User user)
@@ -47,7 +47,7 @@ public class AccountService
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = RefreshTokenExpiresAt
         };
-        var result =  await _refreshTokenService.AddAsync(NewRefreshToken);
+        var result =  await _refreshTokenRepository.AddAsync(NewRefreshToken);
         
         return new AuthTokenDto
         {
@@ -66,14 +66,14 @@ public class AccountService
             return null;
         
         var tokenHash = HashRefreshToken(refreshToken);
-        var StoredToken = await _refreshTokenService.GetActiveByHashTokenAsync(tokenHash);
+        var StoredToken = await _refreshTokenRepository.GetActiveByHashTokenAsync(tokenHash);
         
         if (StoredToken?.User is null || !StoredToken.IsActive)
             return null;
         
         var newAuthToken = await GenerateAuthTokenAsync(StoredToken.User);
         
-        await _refreshTokenService.RevokeAsync(StoredToken, newAuthToken.RefreshToken);
+        await _refreshTokenRepository.RevokeAsync(StoredToken, newAuthToken.RefreshToken);
         
         return newAuthToken;
         
@@ -84,12 +84,12 @@ public class AccountService
             return false;
 
         var tokenHash = HashRefreshToken(refreshToken);
-        var storedToken = await _refreshTokenService.GetActiveByHashTokenAsync(tokenHash);
+        var storedToken = await _refreshTokenRepository.GetActiveByHashTokenAsync(tokenHash);
 
         if (storedToken is null)
             return false;
 
-        await _refreshTokenService.RevokeAsync(storedToken);
+        await _refreshTokenRepository.RevokeAsync(storedToken);
         return true;
     }
     public async Task<bool> RevokeAllRefreshTokensAsync(string userId)
@@ -97,7 +97,7 @@ public class AccountService
         if (string.IsNullOrWhiteSpace(userId))
             return false;
 
-        await _refreshTokenService.RevokeAllForUserAsync(userId);
+        await _refreshTokenRepository.RevokeAllForUserAsync(userId);
         return true;
     }
     private static string GenerateRefreshToken()

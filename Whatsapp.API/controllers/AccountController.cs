@@ -46,8 +46,7 @@ namespace Whatsapp.API.controllers
                 First_Name = UserDto.FirstName,
                 Last_Name = UserDto.LastName,
             };
-            var result = await _userManager.CreateAsync(newUser);
-
+            var result = await _userManager.CreateAsync(newUser,UserDto.Password);
             if (!result.Succeeded)
             {
                 return BadRequest(Response<string>.Fail(result.Errors.First().Description));
@@ -64,13 +63,14 @@ namespace Whatsapp.API.controllers
             if (userFromdb == null)
                 return Unauthorized(Response<string>.Fail("Email Not Found"));
             
-            var result = await _signInManager.CheckPasswordSignInAsync(userFromdb, UserDto.Password,false);
+            var result = await 
+                _signInManager.CheckPasswordSignInAsync(userFromdb, UserDto.Password,false);
             
             if(!result.Succeeded)
                 return BadRequest(Response<string>.Fail("Email Or Password Incorrect"));
             
             var token = await _accountService.GenerateAuthTokenAsync(userFromdb);
-            return Ok(Response<AuthTokenDto>.Success(token,"Account Created Successfully"));
+            return Ok(Response<AuthTokenDto>.Success(token,"Login Successfully"));
         }
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken(RefreshTokenRequestDto request)

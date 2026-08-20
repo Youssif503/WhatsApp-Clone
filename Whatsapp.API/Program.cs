@@ -10,6 +10,7 @@ using Whatsapp.API.Helpers;
 using Whatsapp.BLL.Services;
 using Whatsapp.DAL.data;
 using Whatsapp.DAL.models;
+using Whatsapp.DAL.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,9 @@ builder.Services.AddDbContext<ApplicationDbContext>
     (options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<RefreshTokenRepository>();
+builder.Services.AddMemoryCache();
+
 builder.Services.AddIdentity<User,IdentityRole>(op =>
     {
         op.User.RequireUniqueEmail = true;
