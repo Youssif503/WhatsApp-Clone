@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -84,6 +85,22 @@ namespace Whatsapp.API.controllers
                 return Unauthorized("Invalid or expired refresh token");
 
             return Ok(Response<AuthTokenDto>.Success(token,"Refresh Token  Created Successfully"));
+        }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> LogoutAsync()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if(userId == null)
+                return Unauthorized(Response<string>.Fail("User Is Not LoggedIn"));
+            
+            bool result = 
+                await _accountService.RevokeAllRefreshTokensAsync(userId);
+            
+            if (!result)
+                return BadRequest(Response<string>.Fail("Something went wrong..."));
+            
+            return NoContent();
         }
     }
 }

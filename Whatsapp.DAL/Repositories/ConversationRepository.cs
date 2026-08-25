@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Whatsapp.DAL.data;
+using Whatsapp.DAL.Helpers;
 using Whatsapp.DAL.models;
 
 namespace Whatsapp.DAL.Services;
@@ -7,6 +8,12 @@ namespace Whatsapp.DAL.Services;
 public class ConversationRepository
 {
     private readonly ApplicationDbContext _dbContext;
+
+    public ConversationRepository(ApplicationDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
     public async Task<List<ConversationMember>> GetUserConversationsIdsAsync(string userId)
     {
         return await _dbContext.ConversationMembers
@@ -15,14 +22,34 @@ public class ConversationRepository
             .ToListAsync();
     }
 
-    public async Task<List<Conversation>> GetUserConversationsAsync(string userId)
+    public async Task<List<ConversationResponse>> GetUserConversationsAsync(
+        string userId)
     {
         return await _dbContext.Conversations
             .AsNoTracking()
-            .Include(c => c.Messages)
             .Where(c => c.Members.Any(x => x.UserId == userId))
+            .Select(c => new ConversationResponse
+            {
+                ConversationId = c.Id,
+                ImageUrl = c.IsGroup 
+                    ? c.ImageUrl
+                    :c.Members.Where(m => m.UserId != userId)
+                        .Select(m => m.User.ImageUrl)
+                        .FirstOrDefault(),
+
+                LastMessage = c.Messages
+                    .OrderByDescending(m => m.SentAt)
+                    .Select(m => m.Content)
+                    .FirstOrDefault(),
+
+                LastMessageTime = c.Messages
+                    .OrderByDescending(m => m.SentAt)
+                    .Select(m => (DateTime?)m.SentAt)
+                    .FirstOrDefault()
+            })
             .ToListAsync();
     }
+    
     public async Task<bool> IsInConversation(string conversationId, string userId)
     {
          var result =  await 

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Whatsapp.DAL.data;
+using Whatsapp.DAL.Helpers;
 using Whatsapp.DAL.models;
 
 namespace Whatsapp.DAL.Services;
@@ -19,11 +20,25 @@ public class MessageRepository
         return message;
     }
 
-    public async Task<List<Message>> GetMessagesAsync(string UserId,string ConversationId)
+    public async Task<List<Message>> GetMessagesAsync( 
+        string ConversationId,CursorPaginationRequest request)
     {
-        return await _dbContext
-            .Messages
-            .Where(m => m.SenderId == UserId && m.ConversationId == ConversationId)
-            .OrderBy(c => c.SentAt).ToListAsync();
+        
+        var query = _dbContext.Messages.Where(m =>
+                m.ConversationId == ConversationId);
+        
+        if (request.Cursor.HasValue)
+        {
+            query = query.Where(m => m.SentAt < request.Cursor.Value);
+        }
+        
+        
+        var messages =  await query
+            .OrderByDescending(m => m.SentAt)
+            .ThenByDescending(m=>m.Id)
+            .Take((request.Limit ?? 20) +1)
+            .ToListAsync();
+        
+        return messages;
     }
 }

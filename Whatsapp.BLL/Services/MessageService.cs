@@ -1,5 +1,6 @@
 using Whatsapp.BLL.DTOs;
 using Whatsapp.BLL.DTOs.Messages;
+using Whatsapp.DAL.Helpers;
 using Whatsapp.DAL.models;
 using Whatsapp.DAL.Services;
 
@@ -45,22 +46,44 @@ public class MessageService
         };
     }
 
-    public async Task<List<MessageResponseDTo>> GetMessagesAsync(string userId, string conversationId)
+    public async Task<CursorPaginationResponse<MessageResponseDTo>> GetMessagesAsync(
+        string userId,
+        string conversationId,
+        CursorPaginationRequest request)
     {
-        bool isMember = 
-            await _conversationRepository.IsInConversation(userId, conversationId);
-        if (!isMember)
-            throw new UnauthorizedAccessException("Usre Nott In Group");
-        
-        var result = await _messageRepository.
-            GetMessagesAsync(userId,conversationId);
+        bool isMember =
+            await _conversationRepository.IsInConversation(
+                userId,
+                conversationId);
 
-        return result.Select(x => new MessageResponseDTo()
+        if (!isMember)
+            throw new UnauthorizedAccessException("User Not In Group");
+
+        var result = await _messageRepository.
+            GetMessagesAsync(conversationId, request);
+
+        var limit = request.Limit ?? 20;
+
+        var hasNextPage = result.Count > limit;
+
+        if (hasNextPage)
         {
-            ConversationId = x.ConversationId,
-            SenderId = x.SenderId,
-            CreatedAt = x.SentAt,
-            Content = x.Content
-        }).ToList();
+            result.RemoveAt(result.Count - 1);
+        }
+
+        var nextCursor = result.LastOrDefault()?.SentAt;
+        
+        return new CursorPaginationResponse<MessageResponseDTo>
+        {
+            data = result.Select(x => new MessageResponseDTo
+            {
+                Content = x.Content,
+                SenderId = x.SenderId,
+                CreatedAt = x.SentAt,
+                ConversationId = x.ConversationId
+            }).ToList(),
+            NextCursor = hasNextPage ? nextCursor : null,
+            HasNext = hasNextPage
+        };
     }
 }

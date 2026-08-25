@@ -1,11 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Whatsapp.API.Helpers;
 using Whatsapp.BLL.DTOs;
-using Whatsapp.BLL.DTOs.Conversations;
 using Whatsapp.BLL.Services;
+using Whatsapp.DAL.Helpers;
 
 namespace Whatsapp.API.controllers
 {
@@ -34,7 +33,7 @@ namespace Whatsapp.API.controllers
             if(result == null)
                 return BadRequest(Response<string>.Fail("Conversation creation failed"));
             
-            return Ok(Response<string>.Fail("Conversation created Successfully"));
+            return Ok(Response<string>.Success("Conversation created Successfully"));
         }
         
         [HttpPost("CreateGroup")]
@@ -47,7 +46,7 @@ namespace Whatsapp.API.controllers
                 return Unauthorized(Response<string>.Fail("Unauthorized User"));
             
             Group.MemberId = UserMemberId;
-            _conversationService.CreateGroup(Group);
+            await _conversationService.CreateGroup(Group);
             return Ok(Response<string>.Success("Group created Successfully"));
         }
 
@@ -61,8 +60,7 @@ namespace Whatsapp.API.controllers
             var conversations = 
                 await _conversationService.GetUserConversationsAsync(UserId);
             
-            return Ok(Response<List<ConversationResponse>>.Success(conversations));
+            return Ok(Response<List<ConversationResponse>>.Success(conversations,""));
         }
-        
     }
 }

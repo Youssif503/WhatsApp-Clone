@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SQLitePCL;
 using Whatsapp.API.Helpers;
+using Whatsapp.API.Hubs;
 using Whatsapp.BLL.Services;
 using Whatsapp.DAL.data;
 using Whatsapp.DAL.models;
@@ -27,8 +28,13 @@ builder.Services.AddDbContext<ApplicationDbContext>
     (options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<ConversationService>();
+builder.Services.AddScoped<MessageService>();
 builder.Services.AddScoped<RefreshTokenRepository>();
+builder.Services.AddScoped<ConversationRepository>();
+builder.Services.AddScoped<MessageRepository>();
 builder.Services.AddMemoryCache();
+builder.Services.AddSignalR();
 
 builder.Services.AddIdentity<User,IdentityRole>(op =>
     {
@@ -84,7 +90,7 @@ var app = builder.Build();
     app.UseSwagger();
     app.UseSwaggerUI();
 
-
+app.MapHub<ChatHUb>("/chat");
 app.MapControllers();
 app.UseHttpsRedirection();
 app.UseAuthentication();

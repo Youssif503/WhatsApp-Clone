@@ -1,8 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Whatsapp.BLL.DTOs;
-using Whatsapp.BLL.DTOs.Conversations;
 using Whatsapp.DAL;
-using Whatsapp.DAL.data;
+using Whatsapp.DAL.Helpers;
 using Whatsapp.DAL.models;
 using Whatsapp.DAL.Services;
 namespace Whatsapp.BLL.Services;
@@ -28,25 +27,7 @@ public class ConversationService
 
     public async Task<List<ConversationResponse>> GetUserConversationsAsync(string userId)
     {
-        var conversations =
-            await _ConversationRepository.GetUserConversationsAsync(userId);
-
-        var result = conversations.Select(x =>
-        {
-            var lastMessage = x.Messages
-                .OrderByDescending(m => m.SentAt)
-                .FirstOrDefault();
-
-            return new ConversationResponse
-            {
-                ConversationId = x.Id,
-                ImageUrl = x.ImageUrl,
-                LastMessage = lastMessage?.Content,
-                LastMessageTime = lastMessage.SentAt
-            };
-        });
-
-        return result.ToList();
+        return await _ConversationRepository.GetUserConversationsAsync(userId);
     }
     public async Task<Conversation> CreateConversation(CreateConverstaionDto Dto)
     {
@@ -89,19 +70,21 @@ public class ConversationService
             Id = Guid.NewGuid().ToString(),
             IsGroup = true,
             Name = Dto.GroupName,
+            CreatedAt =  DateTime.UtcNow,
         };
         
         NewConversation.Members.Add(new ConversationMember
         {
-            UserId = Dto.MemberId
+            UserId = Dto.MemberId,
+            JoinedAt =  DateTime.UtcNow,
         });
         
         foreach (var userId in Dto.Members.Distinct())
         {
-            
             NewConversation.Members.Add(new ConversationMember
             {
-                UserId = userId
+                UserId = userId,
+                JoinedAt =  DateTime.UtcNow,
             });
         }
         

@@ -21,7 +21,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Whatsapp.BLL\Whatsapp.BLL.csproj" />
-      <ProjectReference Include="..\Whatsapp.DAL\Whatsapp.DAL.csproj" />
     </ItemGroup>
 
     <ItemGroup>

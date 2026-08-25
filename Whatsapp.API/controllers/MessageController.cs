@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Whatsapp.API.Helpers;
 using Whatsapp.BLL.Services;
+using Whatsapp.DAL.Helpers;
+
 
 namespace Whatsapp.API.controllers
 {
@@ -17,14 +20,15 @@ namespace Whatsapp.API.controllers
         }
 
         [HttpGet("{ConversationId}/messages")]
-        public async Task<IActionResult> GetMessage(string ConversationId)
+        public async Task<IActionResult> GetMessage(string ConversationId,
+           [FromQuery] CursorPaginationRequest PaginationRequest )
         {
             var userId = User.FindFirst("Sub")?.Value;
             if(userId == null)
                 return Unauthorized("Pleaze Login....");
             
             var result = 
-                await _MessageService.GetMessagesAsync(userId, ConversationId);
+                await _MessageService.GetMessagesAsync(userId, ConversationId,PaginationRequest);
             
             return Ok(result);
         }
