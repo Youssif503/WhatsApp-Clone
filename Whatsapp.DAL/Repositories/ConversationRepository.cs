@@ -31,6 +31,11 @@ public class ConversationRepository
             .Select(c => new ConversationResponse
             {
                 ConversationId = c.Id,
+                Name = c.IsGroup
+                    ? c.Name
+                    : c.Members.Where(m => m.UserId != userId)
+                        .Select(m => m.User.First_Name + " " + m.User.Last_Name)
+                        .FirstOrDefault(),
                 ImageUrl = c.IsGroup 
                     ? c.ImageUrl
                     :c.Members.Where(m => m.UserId != userId)

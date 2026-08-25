@@ -33,7 +33,7 @@ public class ConversationService
     {
         // if the conversation is exist ?
         var conversation =
-            await _ConversationRepository.IsConversationExist(Dto.UserMemberId,Dto.OtherUserId);
+            await _ConversationRepository.IsConversationExist(Dto.UserMemberId!,Dto.OtherUserId);
         
         if (conversation is not null)
         {
@@ -48,7 +48,7 @@ public class ConversationService
         
         NewConversation.Members.Add(new ConversationMember()
         {
-            UserId = Dto.UserMemberId,
+            UserId = Dto.UserMemberId!,
             JoinedAt = DateTime.UtcNow,
         });
         

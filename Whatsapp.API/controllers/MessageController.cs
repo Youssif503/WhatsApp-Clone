@@ -23,7 +23,7 @@ namespace Whatsapp.API.controllers
         public async Task<IActionResult> GetMessage(string ConversationId,
            [FromQuery] CursorPaginationRequest PaginationRequest )
         {
-            var userId = User.FindFirst("Sub")?.Value;
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if(userId == null)
                 return Unauthorized("Pleaze Login....");
             

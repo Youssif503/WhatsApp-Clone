@@ -22,20 +22,21 @@ public class MessageService
         // need to know if this user in conversation ?
         bool result = 
             await _conversationRepository.IsInConversation(
-                MessageDto.SenderId, MessageDto.ConversationId);
+                MessageDto.ConversationId, MessageDto.SenderId);
         
         if (!result)
             throw new UnauthorizedAccessException("Usre Nott In Group");
 
         var message = new Message()
         {
+            Id = Guid.NewGuid().ToString(),
             ConversationId = MessageDto.ConversationId,
             SenderId = MessageDto.SenderId,
             SentAt = MessageDto.CreatedAt,
             Content = MessageDto.Content
         };
         
-        _messageRepository.SaveMessageAsync(message);
+        await _messageRepository.SaveMessageAsync(message);
         
         return new MessageResponseDTo()
         {
@@ -53,8 +54,8 @@ public class MessageService
     {
         bool isMember =
             await _conversationRepository.IsInConversation(
-                userId,
-                conversationId);
+                conversationId,
+                userId);
 
         if (!isMember)
             throw new UnauthorizedAccessException("User Not In Group");

@@ -35,9 +35,13 @@ public class ChatHUb : Hub
 
     public async Task SendMessageAsync(CreateMessageDto Message)
     {
-        var userId = Context.User.FindFirst("Sub")?.Value;
+        var userId = Context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
             throw new HubException("User is not authenticated User.");
+
+        // Always use the authenticated sender, never an ID supplied by a client.
+        // Recipients need this real ID to place incoming messages on the left.
+        Message.SenderId = userId;
 
         // save message to db
         var message =
@@ -53,7 +57,7 @@ public class ChatHUb : Hub
 
     public async Task NotifyTyping(string conversationId)
     {
-        var userId = Context.User.FindFirst("Sub")?.Value;
+        var userId = Context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null)
             throw new HubException("User is not authenticated User.");
         
@@ -64,7 +68,7 @@ public class ChatHUb : Hub
 
     public async Task StopedTyping(string conversationId)
     {
-        var userId = Context.User.FindFirst("Sub")?.Value;
+        var userId = Context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (userId == null)
             throw new HubException("User is not authenticated User.");
@@ -168,4 +172,3 @@ public class ChatHUb : Hub
         return users;
     }
 }
-
